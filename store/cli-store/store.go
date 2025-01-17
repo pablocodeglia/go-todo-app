@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"reflect"
 	"strconv"
 	"sync"
 	"time"
@@ -26,11 +25,10 @@ type TodoStoreData struct {
 }
 
 type Todo struct {
-	Task      string    `json:"task"`
-	IsDone    bool      `json:"isDone"`
-	CreatedAt time.Time `json:"createdAt"`
+	Task      string    `json:"task" validate:"required"`
+	IsDone    bool      `json:"isDone" validate:"boolean"`
+	CreatedAt time.Time `json:"createdAt" validate:"required"`
 }
-
 type TodoStorer interface {
 	Add()
 	Delete()

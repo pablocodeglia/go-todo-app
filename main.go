@@ -4,8 +4,8 @@ import (
 	"log"
 	"net/http"
 
-	// "todoapp/cli"
 	apiv1 "todoapp/api/v1"
+	"todoapp/cli"
 	clistore "todoapp/store/cli-store"
 )
 
@@ -16,9 +16,9 @@ func NewStore() *clistore.TodoStore {
 }
 
 func main() {
-	// cli.Clr()
-	// store := NewStore()
-	// store.LogUser()
+	cli.Clr()
+	store := NewStore()
+	store.LogUser()
 	mux := http.NewServeMux()
 	apiv1.RegisterApiHandlers(mux)
 
