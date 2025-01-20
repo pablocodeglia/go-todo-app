@@ -1,11 +1,12 @@
 package clistore
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
-	"os"
+	"net/http"
 	"strconv"
 	"sync"
 	"time"
@@ -128,25 +129,34 @@ func (s *TodoStore) LogUser() {
 }
 
 func (s *TodoStore) LoadData() {
-	s.Mu.Lock()
 
-	cli.Clr()
-	file, err := os.Open(fmt.Sprintf("data/%s.json", s.CurrentUserId))
+	url := fmt.Sprintf("http://127.0.0.1:8080/api/v1/todo/%s", s.CurrentUserId)
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		fmt.Printf("\n- Attention: No previous saved data found!\n")
+		fmt.Print(err.Error())
+	}
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		fmt.Print(err.Error())
 	}
 
-	byteValue, _ := io.ReadAll(file)
+	defer res.Body.Close()
+	body, readErr := io.ReadAll(res.Body)
+	if readErr != nil {
+		fmt.Print(err.Error())
+	}
 
+	cli.Clr()
+
+	s.Mu.Lock()
 	var userData TodoStoreData
-	json.Unmarshal([]byte(byteValue), &userData)
+	json.Unmarshal(body, &userData)
 
 	for i := 0; i < len(userData.Data); i++ {
 		for k, v := range userData.Data[i] {
 			s.Data[k] = v
 		}
 	}
-
 	s.Mu.Unlock()
 }
 
@@ -158,18 +168,40 @@ func (s *TodoStore) SaveChangesToFile() {
 		dataTosave.Data = append(dataTosave.Data, map[string]Todo{k: v})
 	}
 
-	jsonBytes, err := json.Marshal(dataTosave)
+	jsonBytes, err := json.MarshalIndent(dataTosave, " "," ")
 	if err != nil {
 		log.Fatal(err)
 	}
+	//
+	//
+	//
+	url := fmt.Sprintf("http://127.0.0.1:8080/api/v1/todo/new/%s", s.CurrentUserId)
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonBytes))
+	if err != nil {
+		fmt.Print(err.Error())
+	}
 
-	os.WriteFile(fmt.Sprintf("data/%s.json", s.CurrentUserId), jsonBytes, os.ModePerm)
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		fmt.Print(err.Error())
+	}
+
+	defer res.Body.Close()
+
+	// body, readErr := io.ReadAll(res.Body)
+	// if readErr != nil {
+	// 	fmt.Print(err.Error())
+	// }
+	//
+	//
+	//
+	// os.WriteFile(fmt.Sprintf("data/%s.json", s.CurrentUserId), jsonBytes, os.ModePerm)
+	s.Mu.Unlock()
 
 	cli.Clr()
 	fmt.Printf("\n- Success! Changes saved!\n")
 	s.ListTodos()
 	s.DisplayOptions()
-	s.Mu.Unlock()
 }
 
 func (s *TodoStore) DisplayOptions() {

@@ -101,7 +101,7 @@ func (h *TodoCreateHandler) SaveUserChanges(w http.ResponseWriter, r *http.Reque
 	byteValue, _ := io.ReadAll(r.Body)
 
 	os.WriteFile(fmt.Sprintf("data/%s.json", userId), byteValue, os.ModePerm)
-
+	w.WriteHeader(http.StatusOK)
 }
 
 func (h *TodosHandler) UpdateTodo(w http.ResponseWriter, r *http.Request) {
