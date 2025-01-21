@@ -18,8 +18,8 @@ func saveUserJsonFile(w http.ResponseWriter, userId string, data clistore.TodoSt
 	os.WriteFile(fmt.Sprintf("data/%s.json", userId), bytesToSave, os.ModePerm)
 }
 
-func findIndexByTodoIdFunc(userData clistore.TodoStoreData, todoId string) int {
-	i := slices.IndexFunc(userData.Data, func(data map[string]clistore.Todo) bool {
+func findIndexByTodoIdFunc(todosMap []map[string]clistore.Todo, todoId string) int {
+	i := slices.IndexFunc(todosMap, func(data map[string]clistore.Todo) bool {
 		for k := range data {
 			if k == todoId {
 				return true

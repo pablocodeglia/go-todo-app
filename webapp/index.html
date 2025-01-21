@@ -1,0 +1,69 @@
+<h1>Test</h1>
+<div>
+  <p>{{len .}} todo{{if gt (len .) 1}}s{{end}}</p>
+</div>
+
+<div class="">
+  <input
+    type="text"
+    class="form-control"
+    id="newTodoInput"
+    placeholder="Task Description"
+  />
+  <button type="button" class="btn btn-dark" id="newSubmit" onclick="addTodo()">
+    Add Todo
+  </button>
+</div>
+
+<div>
+  {{range .data}} {{range $key,$value := .}}
+  <p>{{$key}}: {{$value.Task}}</p>
+  <p>Created on: {{$value.CreatedAt.Format "Jan 02, 2006" }}</p>
+  <p>Is done: {{$value.IsDone}}</p>
+  <button type="button" onclick="deleteTodo('{{$key}}')">Delete</button>
+  <button type="button" onclick="updateTask({{$value.IsDone}}, '{{$key}}')">
+    Mark as {{if eq true $value.IsDone}} not done {{else}} done {{end}}
+  </button>
+  {{end}} {{end}}
+</div>
+
+<script>
+  let userId = "{{.userId}}";
+  let userBaseUrl = "http://127.0.0.1:8080/api/v1/todo/" + userId;
+
+  function updateTask(isDone, todoId) {
+    let url = userBaseUrl + "/" + todoId;
+
+    fetch(url, {
+      method: "PUT",
+      body: JSON.stringify({
+        isDone: !isDone,
+      }),
+    }).then(() => window.location.reload());
+  }
+
+  function addTodo() {
+    newTodo = document.getElementById("newTodoInput").value;
+
+    fetch(userBaseUrl, {
+      method: "POST",
+      body: JSON.stringify({
+        task: newTodo,
+        isDone: false,
+        createdAt: new Date().toISOString(),
+      }),
+      headers: {
+        "Content-type": "application/json; charset=UTF-8",
+      },
+    }).then(() => window.location.reload());
+  }
+
+  function deleteTodo(todoId) {
+    let url = userBaseUrl + "/" + todoId;
+    console.log(url);
+
+    fetch(url, {
+      method: "DELETE",
+    }).then(() => window.location.reload());
+  }
+</script>

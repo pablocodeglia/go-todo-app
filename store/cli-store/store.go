@@ -172,9 +172,7 @@ func (s *TodoStore) SaveChangesToFile() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	//
-	//
-	//
+
 	url := fmt.Sprintf("http://127.0.0.1:8080/api/v1/todo/new/%s", s.CurrentUserId)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonBytes))
 	if err != nil {
@@ -188,14 +186,6 @@ func (s *TodoStore) SaveChangesToFile() {
 
 	defer res.Body.Close()
 
-	// body, readErr := io.ReadAll(res.Body)
-	// if readErr != nil {
-	// 	fmt.Print(err.Error())
-	// }
-	//
-	//
-	//
-	// os.WriteFile(fmt.Sprintf("data/%s.json", s.CurrentUserId), jsonBytes, os.ModePerm)
 	s.Mu.Unlock()
 
 	cli.Clr()

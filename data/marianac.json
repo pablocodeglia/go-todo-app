@@ -3,7 +3,7 @@
    {
     "4fee6ab5-0ac1-45e8-951b-9bfbc73eaf46": {
      "task": "Run errands",
-     "isDone": true,
+     "isDone": false,
      "createdAt": "2015-05-22T14:56:29Z"
     }
    },
@@ -24,7 +24,7 @@
    {
     "db4a398b-5456-4c50-90b6-3d4afa3b14b5": {
      "task": "Update todo test",
-     "isDone": true,
+     "isDone": false,
      "createdAt": "2018-05-22T14:56:29Z"
     }
    }
