@@ -11,46 +11,31 @@ import (
 	"sync"
 	"time"
 	cli "todoapp/cli"
+	types "todoapp/types"
 
 	"github.com/google/uuid"
 )
 
 type TodoStore struct {
 	CurrentUserId string
-	Data          map[string]Todo
+	Data          map[string]types.Todo
 	Mu            sync.Mutex
+	Stdin         io.Reader
 }
 
-type TodoStoreData struct {
-	Data []map[string]Todo `json:"data"`
+func NewStore() *TodoStore {
+	return &TodoStore{
+		Data: make(map[string]types.Todo),
+	}
 }
 
-type Todo struct {
-	Task      string    `json:"task" validate:"required"`
-	IsDone    bool      `json:"isDone" validate:"boolean"`
-	CreatedAt time.Time `json:"createdAt" validate:"required"`
-}
-type TodoStorer interface {
-	Add()
-	Delete()
-	MarkAsDone()
-	ListTodos()
-	ClearCache()
-	ChangeCurrentUser()
-	LoadData()
-	SaveChangesToFile()
-	DisplayOptions()
-}
-
-func (s *TodoStore) Add() {
+func (s *TodoStore) Add(newTaskName string) {
 
 	cli.Clr()
 	taskUuid := uuid.New()
 
-	newTaskName := cli.GetUserInput("New task description: ")
-
 	s.Mu.Lock()
-	s.Data[taskUuid.String()] = Todo{
+	s.Data[taskUuid.String()] = types.Todo{
 		Task:      newTaskName,
 		IsDone:    false,
 		CreatedAt: time.Now(),
@@ -59,14 +44,14 @@ func (s *TodoStore) Add() {
 
 	cli.Clr()
 	println("\n- Success! Task added.\n")
-	s.ListTodos()
-	s.DisplayOptions()
+	// s.ListTodos()
+	// s.DisplayOptions()
 }
 
 func (s *TodoStore) Delete() {
 	s.Mu.Lock()
 
-	taskId := cli.GetUserInput("Todo's ID to be removed:")
+	taskId := cli.GetUserInput("Todo's ID to be removed:", s.Stdin)
 	delete(s.Data, taskId)
 	println("\n- Success! Todo removed.\n")
 
@@ -78,7 +63,7 @@ func (s *TodoStore) Delete() {
 func (s *TodoStore) MarkAsDone() {
 	cli.Clr()
 	s.ListTodos()
-	taskId := cli.GetUserInput("\n- Todo's ID to mark as done:")
+	taskId := cli.GetUserInput("\n- Todo's ID to mark as done:", s.Stdin)
 
 	s.Mu.Lock()
 
@@ -115,13 +100,13 @@ func (s *TodoStore) ListTodos() {
 func (s *TodoStore) ClearCache() {
 	s.Mu.Lock()
 
-	s.Data = map[string]Todo{}
+	s.Data = map[string]types.Todo{}
 
 	s.Mu.Unlock()
 }
 
 func (s *TodoStore) LogUser() {
-	s.CurrentUserId = cli.GetUserInput("Username: ")
+	s.CurrentUserId = cli.GetUserInput("Username: ", s.Stdin)
 	s.ClearCache()
 	s.LoadData()
 	s.ListTodos()
@@ -130,13 +115,16 @@ func (s *TodoStore) LogUser() {
 
 func (s *TodoStore) LoadData() {
 
-	url := fmt.Sprintf("http://127.0.0.1:8080/api/v1/todo/%s", s.CurrentUserId)
+	client := &http.Client{}
+
+	url := fmt.Sprintf("http://localhost:8080/api/v1/todo/%s", s.CurrentUserId)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		fmt.Print(err.Error())
 	}
-	res, err := http.DefaultClient.Do(req)
+	res, err := client.Do(req)
 	if err != nil {
+		fmt.Println("client error")
 		fmt.Print(err.Error())
 	}
 
@@ -149,7 +137,7 @@ func (s *TodoStore) LoadData() {
 	cli.Clr()
 
 	s.Mu.Lock()
-	var userData TodoStoreData
+	var userData types.TodoStoreData
 	json.Unmarshal(body, &userData)
 
 	for i := 0; i < len(userData.Data); i++ {
@@ -161,14 +149,17 @@ func (s *TodoStore) LoadData() {
 }
 
 func (s *TodoStore) SaveChangesToFile() {
+
+	client := &http.Client{}
+
 	s.Mu.Lock()
 
-	dataTosave := TodoStoreData{Data: []map[string]Todo{}}
+	dataTosave := types.TodoStoreData{Data: []map[string]types.Todo{}}
 	for k, v := range s.Data {
-		dataTosave.Data = append(dataTosave.Data, map[string]Todo{k: v})
+		dataTosave.Data = append(dataTosave.Data, map[string]types.Todo{k: v})
 	}
 
-	jsonBytes, err := json.MarshalIndent(dataTosave, " "," ")
+	jsonBytes, err := json.MarshalIndent(dataTosave, " ", " ")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -179,7 +170,7 @@ func (s *TodoStore) SaveChangesToFile() {
 		fmt.Print(err.Error())
 	}
 
-	res, err := http.DefaultClient.Do(req)
+	res, err := client.Do(req)
 	if err != nil {
 		fmt.Print(err.Error())
 	}
@@ -201,7 +192,7 @@ func (s *TodoStore) DisplayOptions() {
 	fmt.Printf("3. Delete TODO\n")
 	fmt.Printf("4. Save changes to file\n")
 	fmt.Printf("5. Change current user\n")
-	choice := cli.GetUserInput("\nSelect one option by number:")
+	choice := cli.GetUserInput("\nSelect one option by number:", s.Stdin)
 	choiceInt, err := strconv.Atoi(choice)
 	for (err != nil) || !(choiceInt < 6 && choiceInt > 0) {
 		fmt.Printf("Invalid option!!!\n")
@@ -210,7 +201,11 @@ func (s *TodoStore) DisplayOptions() {
 	}
 	switch choiceInt {
 	case 1:
-		s.Add()
+		cli.Clr()
+		newTaskName := cli.GetUserInput("New task description: ", s.Stdin)
+		s.Add(newTaskName)
+		s.ListTodos()
+		s.DisplayOptions()
 	case 2:
 		s.MarkAsDone()
 	case 3:
