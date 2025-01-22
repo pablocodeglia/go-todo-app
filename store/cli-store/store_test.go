@@ -8,13 +8,16 @@ import (
 	httpV1 "todoapp/http"
 )
 
-func TestAdd(t *testing.T) {
-	//initialize server for Api endpoints
+func initializeApi() {
 	mux := http.NewServeMux()
 	apiv1.RegisterApiHandlers(mux)
 	httpV1.RegisterHttpHandlers(mux)
-	// log.Println("Server is running on port 8080...")
 	go http.ListenAndServe("localhost:8080", mux)
+}
+
+func TestAdd(t *testing.T) {
+	//initialize server for Api endpoints
+	initializeApi()
 
 	//
 	store := NewStore()
@@ -35,4 +38,20 @@ func TestAdd(t *testing.T) {
 		t.Errorf("got %q want %q", got, want)
 	}
 
+}
+
+func BenchmarkClearCache(b *testing.B) {
+	store := NewStore()
+
+	for i := 0; i < b.N; i++ {
+		store.ClearCache()
+	}
+}
+
+func BenchmarkListTodos(b *testing.B) {
+	store := NewStore()
+
+	for i := 0; i < b.N; i++ {
+		store.ListTodos()
+	}
 }

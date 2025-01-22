@@ -44,18 +44,16 @@ func (s *TodoStore) Add(newTaskName string) {
 
 	cli.Clr()
 	println("\n- Success! Task added.\n")
-	// s.ListTodos()
-	// s.DisplayOptions()
 }
 
 func (s *TodoStore) Delete() {
-	s.Mu.Lock()
-
+	
 	taskId := cli.GetUserInput("Todo's ID to be removed:", s.Stdin)
+	s.Mu.Lock()
 	delete(s.Data, taskId)
+	s.Mu.Unlock()
 	println("\n- Success! Todo removed.\n")
 
-	s.Mu.Unlock()
 	s.ListTodos()
 	s.DisplayOptions()
 }
@@ -73,6 +71,7 @@ func (s *TodoStore) MarkAsDone() {
 	}
 
 	s.Mu.Unlock()
+
 	cli.Clr()
 	fmt.Printf("\n- Success! Todo marked as done.\n")
 	s.ListTodos()
@@ -82,6 +81,8 @@ func (s *TodoStore) MarkAsDone() {
 func (s *TodoStore) ListTodos() {
 	fmt.Printf("\n######### TODOS ##########\n")
 	i := 1
+
+	s.Mu.Lock()
 	for k, v := range s.Data {
 		fmt.Printf("- Task %d (Id: %s)\n", i, k)
 		fmt.Printf("\t- %s\n", v.Task)
@@ -95,6 +96,8 @@ func (s *TodoStore) ListTodos() {
 		i++
 	}
 	fmt.Println("")
+	s.Mu.Lock()
+
 }
 
 func (s *TodoStore) ClearCache() {
@@ -158,6 +161,9 @@ func (s *TodoStore) SaveChangesToFile() {
 	for k, v := range s.Data {
 		dataTosave.Data = append(dataTosave.Data, map[string]types.Todo{k: v})
 	}
+	
+	s.Mu.Unlock()
+
 
 	jsonBytes, err := json.MarshalIndent(dataTosave, " ", " ")
 	if err != nil {
@@ -176,8 +182,6 @@ func (s *TodoStore) SaveChangesToFile() {
 	}
 
 	defer res.Body.Close()
-
-	s.Mu.Unlock()
 
 	cli.Clr()
 	fmt.Printf("\n- Success! Changes saved!\n")
