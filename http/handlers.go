@@ -16,11 +16,12 @@ type User struct {
 }
 
 func RegisterHttpHandlers(mux *http.ServeMux) {
-	fileServer := http.FileServer(http.Dir("./static/"))
-	// mux.HandleFunc("/", HandleRootView)
+	mux.HandleFunc("/", HandleRootView)
 	mux.HandleFunc("/users", HandleUsersView)
-	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
 	mux.HandleFunc("/todos/{userId}", HandleTodosView)
+
+	fileServer := http.FileServer(http.Dir("./static/"))
+	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
 
 }
 
@@ -56,7 +57,7 @@ func HandleTodosView(w http.ResponseWriter, r *http.Request) {
 
 	funcMap := template.FuncMap{}
 
-	template, err := template.New("index.html").Funcs(funcMap).ParseFiles("./webapp/index.html")
+	template, err := template.New("todos.html").Funcs(funcMap).ParseFiles("./webapp/todos.html")
 	if err != nil {
 		log.Fatal(err)
 	}

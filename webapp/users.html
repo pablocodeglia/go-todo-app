@@ -5,8 +5,15 @@
     integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
     crossorigin="anonymous"
   />
+  <link href="/static/css/users.css" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,100..700;1,100..700&family=Open+Sans:wght@300;400;500;600;700;800&family=Quicksand:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
 </head>
-<body class="bg-dark bg-gradient">
+<body>
   <script
     src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
     integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
@@ -15,7 +22,7 @@
 
   <div
     id="container"
-    class="w-75 mx-auto d-flex flex-column justify-content-center bg-light bg-gradient"
+    class="w-75 mx-auto d-flex flex-column justify-content-center"
     style="
       margin-top: 10rem;
       min-height: 500px;
@@ -25,18 +32,24 @@
     "
   >
     <div class="text-center">
-      <h5>Select your user:</h5>
+      <header class="text-center text-light my-4">
+        <h1 class="mb-4">Select your user:</h1>
+      </header>
     </div>
     <div class="d-flex justify-content-center align-items-center">
       {{ range $index, $user := .}}
       <div
         id="user-{{$index}}"
-        class="bg-body p-4 m-4 d-flex flex-column rounded shadow"
+        class="p-4 m-4 d-flex flex-column rounded shadow usercard"
         style="width: 200px; height: 200px"
       >
         <div class="d-flex justify-content-center">
           <a href="http://127.0.0.1:8080/todos/{{$index}}">
-            <img src="/static/{{$index}}.png" width="128px" height="128px" />
+            <img
+              src="/static/assets/{{$index}}.png"
+              width="128px"
+              height="128px"
+            />
           </a>
         </div>
         <div class="text-center mt-2">
