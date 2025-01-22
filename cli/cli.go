@@ -3,12 +3,13 @@ package cli
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"strings"
 )
 
-func GetUserInput(q string) string {
+func GetUserInput(q string, stdin io.Reader) string {
 	fmt.Println(q)
 	reader := bufio.NewReader(os.Stdin)
 	userId, err := reader.ReadString('\n')
@@ -18,6 +19,6 @@ func GetUserInput(q string) string {
 	return strings.TrimSpace(userId)
 }
 
-func Clr(){
+func Clr() {
 	fmt.Print("\033[H\033[2J")
 }

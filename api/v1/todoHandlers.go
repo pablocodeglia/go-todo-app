@@ -6,8 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
-	clistore "todoapp/store/cli-store"
-
+	types "todoapp/types"
 	"github.com/google/uuid"
 )
 
@@ -40,9 +39,9 @@ func (h *TodosHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *TodosHandler) GetTodosByUser(w http.ResponseWriter, r *http.Request) clistore.TodoStoreData {
+func (h *TodosHandler) GetTodosByUser(w http.ResponseWriter, r *http.Request) types.TodoStoreData {
 	userId := r.PathValue("userId")
-	var todos clistore.TodoStoreData
+	var todos types.TodoStoreData
 
 	file, err := os.Open(fmt.Sprintf("./data/%s.json", userId))
 	if err != nil {
@@ -61,7 +60,7 @@ func (h *TodosHandler) GetTodosByUser(w http.ResponseWriter, r *http.Request) cl
 func (h *TodosHandler) CreateTodo(w http.ResponseWriter, r *http.Request) {
 	userId := r.PathValue("userId")
 
-	var newTodo clistore.Todo
+	var newTodo types.Todo
 
 	dec := json.NewDecoder(r.Body)
 
@@ -81,12 +80,12 @@ func (h *TodosHandler) CreateTodo(w http.ResponseWriter, r *http.Request) {
 
 	byteValue, _ := io.ReadAll(file)
 
-	var userData clistore.TodoStoreData
+	var userData types.TodoStoreData
 	json.Unmarshal([]byte(byteValue), &userData)
 
 	// add new todo to file
 	newTodoUUID := uuid.New().String()
-	newTodoObject := map[string]clistore.Todo{newTodoUUID: {Task: newTodo.Task, IsDone: newTodo.IsDone, CreatedAt: newTodo.CreatedAt}}
+	newTodoObject := map[string]types.Todo{newTodoUUID: {Task: newTodo.Task, IsDone: newTodo.IsDone, CreatedAt: newTodo.CreatedAt}}
 	userData.Data = append(userData.Data, newTodoObject)
 
 	// save new file
@@ -115,7 +114,7 @@ func (h *TodosHandler) UpdateTodo(w http.ResponseWriter, r *http.Request) {
 	byteValue, _ := io.ReadAll(file)
 	file.Close()
 
-	var userData clistore.TodoStoreData
+	var userData types.TodoStoreData
 	json.Unmarshal([]byte(byteValue), &userData)
 	toUpdateIndex := findIndexByTodoIdFunc(userData.Data, todoId)
 
@@ -145,7 +144,7 @@ func (h *TodosHandler) DeleteTodo(w http.ResponseWriter, r *http.Request) {
 	byteValue, _ := io.ReadAll(file)
 	file.Close()
 
-	var userData clistore.TodoStoreData
+	var userData types.TodoStoreData
 	json.Unmarshal([]byte(byteValue), &userData)
 
 	// get toDeleteIndex of item to be deleted

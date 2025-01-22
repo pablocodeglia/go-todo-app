@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	clistore "todoapp/store/cli-store"
+	types "todoapp/types"
 )
 
 type TodoService struct{}
@@ -22,8 +22,8 @@ func NewTodoService() *TodoService {
 	return &TodoService{}
 }
 
-func (service *TodoService) CreateTodo(userId string, newTodo clistore.Todo) clistore.TodoStoreData {
-	todos := clistore.TodoStoreData{}
+func (service *TodoService) CreateTodo(userId string, newTodo types.Todo) types.TodoStoreData {
+	todos := types.TodoStoreData{}
 	return todos
 	//TODO
 }
@@ -49,7 +49,7 @@ func (service *TodoService) DeleteTodo(userId, todoId string) {
 	//TODO
 }
 
-func (service *TodoService) GetAllByUserId(userId string) []map[string]clistore.Todo {
+func (service *TodoService) GetAllByUserId(userId string) []map[string]types.Todo {
 	url := fmt.Sprintf("http://127.0.0.1:8080/api/v1/todo/%s", userId)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -66,11 +66,10 @@ func (service *TodoService) GetAllByUserId(userId string) []map[string]clistore.
 		fmt.Print(err.Error())
 	}
 
-	var userData clistore.TodoStoreData
+	var userData types.TodoStoreData
 	json.Unmarshal(body, &userData)
 
 	//TODO
-	response := []map[string]clistore.Todo{}
-	response = userData.Data
+	response := userData.Data
 	return response
 }

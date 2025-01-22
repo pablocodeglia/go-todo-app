@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"os"
 	"slices"
-	clistore "todoapp/store/cli-store"
+	types "todoapp/types"
 )
 
-func saveUserJsonFile(w http.ResponseWriter, userId string, data clistore.TodoStoreData) {
+func saveUserJsonFile(w http.ResponseWriter, userId string, data types.TodoStoreData) {
 	bytesToSave, err := json.MarshalIndent(data, " ", " ")
 	if err != nil {
 		InternalServerErrorHandler(w)
@@ -18,8 +18,8 @@ func saveUserJsonFile(w http.ResponseWriter, userId string, data clistore.TodoSt
 	os.WriteFile(fmt.Sprintf("data/%s.json", userId), bytesToSave, os.ModePerm)
 }
 
-func findIndexByTodoIdFunc(todosMap []map[string]clistore.Todo, todoId string) int {
-	i := slices.IndexFunc(todosMap, func(data map[string]clistore.Todo) bool {
+func findIndexByTodoIdFunc(todosMap []map[string]types.Todo, todoId string) int {
+	i := slices.IndexFunc(todosMap, func(data map[string]types.Todo) bool {
 		for k := range data {
 			if k == todoId {
 				return true

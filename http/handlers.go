@@ -16,10 +16,11 @@ type User struct {
 }
 
 func RegisterHttpHandlers(mux *http.ServeMux) {
-
-	mux.HandleFunc("/", HandleRootView)
+	fileServer := http.FileServer(http.Dir("./static/"))
+	// mux.HandleFunc("/", HandleRootView)
 	mux.HandleFunc("/users", HandleUsersView)
-	mux.HandleFunc("/{userId}/todos", HandleTodosView)
+	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
+	mux.HandleFunc("/todos/{userId}", HandleTodosView)
 
 }
 
