@@ -22,33 +22,6 @@ func NewTodoService() *TodoService {
 	return &TodoService{}
 }
 
-func (service *TodoService) CreateTodo(userId string, newTodo types.Todo) types.TodoStoreData {
-	todos := types.TodoStoreData{}
-	return todos
-	//TODO
-}
-
-func (service *TodoService) UpdateTodo() {
-
-	//TODO
-}
-
-func (service *TodoService) DeleteTodo(userId, todoId string) {
-	fmt.Println("userId :", userId)
-	fmt.Println("todoId :", todoId)
-	// currentTodosResponse := service.GetAllByUserId(userId)
-
-	// currentTodosData := Json.Unmarshal(currentTodosResponse, )
-
-	// url := fmt.Sprintf("http://127.0.0.1:8080/api/v1/todo/new/%s", s.CurrentUserId)
-
-	// req, err := http.NewRequest("PUT", url, bytes.NewBuffer(jsonBytes))
-	// if err != nil {
-	// 	fmt.Print(err.Error())
-	// }
-	//TODO
-}
-
 func (service *TodoService) GetAllByUserId(userId string) []map[string]types.Todo {
 	url := fmt.Sprintf("http://127.0.0.1:8080/api/v1/todo/%s", userId)
 	req, err := http.NewRequest("GET", url, nil)
@@ -72,4 +45,16 @@ func (service *TodoService) GetAllByUserId(userId string) []map[string]types.Tod
 	//TODO
 	response := userData.Data
 	return response
+}
+
+func (service *TodoService) CreateTodo(userId string, newTodo types.Todo) {
+	//TODO
+}
+
+func (service *TodoService) UpdateTodo() {
+	//TODO
+}
+
+func (service *TodoService) DeleteTodo(userId, todoId string) {
+	//TODO
 }

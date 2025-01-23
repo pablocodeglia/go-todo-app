@@ -9,7 +9,7 @@ import (
 	types "todoapp/types"
 )
 
-func saveUserJsonFile(w http.ResponseWriter, userId string, data types.TodoStoreData) {
+func saveUserJsonFile(w http.ResponseWriter, userId string, data types.TodoStoreData,) {
 	bytesToSave, err := json.MarshalIndent(data, " ", " ")
 	if err != nil {
 		InternalServerErrorHandler(w)

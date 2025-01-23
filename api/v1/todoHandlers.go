@@ -6,20 +6,26 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"sync"
 	types "todoapp/types"
+
 	"github.com/google/uuid"
 )
 
 func RegisterApiHandlers(mux *http.ServeMux) {
-	mux.Handle("/api/v1/todo/new/{userId}", &TodoCreateHandler{})
+	mux.Handle("/api/v1/todo/new/{userId}", &TodosFileCreateHandler{})
 	mux.Handle("/api/v1/todo/{userId}", &TodosHandler{})
 	mux.Handle("/api/v1/todo/{userId}/{todoId}", &TodosHandler{})
 }
 
-type TodosHandler struct{}
-type TodoCreateHandler struct{}
+type TodosHandler struct {
+	mu sync.Mutex
+}
+type TodosFileCreateHandler struct {
+	mu sync.Mutex
+}
 
-func (h *TodoCreateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *TodosFileCreateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case r.Method == http.MethodPost:
 		h.SaveUserChanges(w, r)
@@ -43,17 +49,22 @@ func (h *TodosHandler) GetTodosByUser(w http.ResponseWriter, r *http.Request) ty
 	userId := r.PathValue("userId")
 	var todos types.TodoStoreData
 
+	h.mu.Lock()
 	file, err := os.Open(fmt.Sprintf("./data/%s.json", userId))
+
 	if err != nil {
 		FileNotFoundErrorHandler(w)
 	} else {
 		byteValue, _ := io.ReadAll(file)
+		file.Close()
 
 		json.Unmarshal(byteValue, &todos)
 
 		w.WriteHeader(http.StatusOK)
 		w.Write(byteValue)
 	}
+	h.mu.Unlock()
+
 	return todos
 }
 
@@ -72,6 +83,7 @@ func (h *TodosHandler) CreateTodo(w http.ResponseWriter, r *http.Request) {
 		BadRequestErrorHandler(w, fmt.Sprintf("%s", err))
 	}
 
+	h.mu.Lock()
 	// open file
 	file, err := os.Open(fmt.Sprintf("./data/%s.json", userId))
 	if err != nil {
@@ -79,6 +91,9 @@ func (h *TodosHandler) CreateTodo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	byteValue, _ := io.ReadAll(file)
+
+	file.Close()
+	h.mu.Unlock()
 
 	var userData types.TodoStoreData
 	json.Unmarshal([]byte(byteValue), &userData)
@@ -89,15 +104,20 @@ func (h *TodosHandler) CreateTodo(w http.ResponseWriter, r *http.Request) {
 	userData.Data = append(userData.Data, newTodoObject)
 
 	// save new file
+	h.mu.Lock()
 	saveUserJsonFile(w, userId, userData)
+	h.mu.Unlock()
 	w.WriteHeader(http.StatusOK)
 }
 
-func (h *TodoCreateHandler) SaveUserChanges(w http.ResponseWriter, r *http.Request) {
+func (h *TodosFileCreateHandler) SaveUserChanges(w http.ResponseWriter, r *http.Request) {
 	userId := r.PathValue("userId")
 	byteValue, _ := io.ReadAll(r.Body)
 
+	h.mu.Lock()
 	os.WriteFile(fmt.Sprintf("data/%s.json", userId), byteValue, os.ModePerm)
+	h.mu.Unlock()
+
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -105,6 +125,7 @@ func (h *TodosHandler) UpdateTodo(w http.ResponseWriter, r *http.Request) {
 	userId := r.PathValue("userId")
 	todoId := r.PathValue("todoId")
 
+	h.mu.Lock()
 	// open file and get existing data
 	file, err := os.Open(fmt.Sprintf("./data/%s.json", userId))
 	if err != nil {
@@ -113,22 +134,25 @@ func (h *TodosHandler) UpdateTodo(w http.ResponseWriter, r *http.Request) {
 
 	byteValue, _ := io.ReadAll(file)
 	file.Close()
+	h.mu.Unlock()
 
 	var userData types.TodoStoreData
 	json.Unmarshal([]byte(byteValue), &userData)
 	toUpdateIndex := findIndexByTodoIdFunc(userData.Data, todoId)
 
-	// decode request body
-	// var updatedTodo clistore.Todo
-
+	// pre-fill with previous data, replace with whatever is sent
 	updatedTodo := userData.Data[toUpdateIndex][todoId]
+	// decode request body
 	json.NewDecoder(r.Body).Decode(&updatedTodo)
 
 	// update todo
 	userData.Data[toUpdateIndex][todoId] = updatedTodo
 
 	// save file
+	h.mu.Lock()
 	saveUserJsonFile(w, userId, userData)
+	h.mu.Unlock()
+
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -136,6 +160,7 @@ func (h *TodosHandler) DeleteTodo(w http.ResponseWriter, r *http.Request) {
 	userId := r.PathValue("userId")
 	todoId := r.PathValue("todoId")
 
+	h.mu.Lock()
 	file, err := os.Open(fmt.Sprintf("./data/%s.json", userId))
 	if err != nil {
 		FileNotFoundErrorHandler(w)
@@ -144,17 +169,22 @@ func (h *TodosHandler) DeleteTodo(w http.ResponseWriter, r *http.Request) {
 	byteValue, _ := io.ReadAll(file)
 	file.Close()
 
+	h.mu.Unlock()
+
 	var userData types.TodoStoreData
 	json.Unmarshal([]byte(byteValue), &userData)
 
 	// get toDeleteIndex of item to be deleted
 	toDeleteIndex := findIndexByTodoIdFunc(userData.Data, todoId)
+
 	// delete item or return not found error
 	if toDeleteIndex == -1 {
 		FileNotFoundErrorHandler(w)
 	} else {
 		userData.Data = append(userData.Data[:toDeleteIndex], userData.Data[toDeleteIndex+1:]...)
+		h.mu.Lock()
 		saveUserJsonFile(w, userId, userData)
+		h.mu.Unlock()
 		w.WriteHeader(http.StatusOK)
 	}
 

@@ -55,9 +55,7 @@ func HandleTodosView(w http.ResponseWriter, r *http.Request) {
 	userId := r.PathValue("userId")
 	service := apiv1.NewTodoService()
 
-	funcMap := template.FuncMap{}
-
-	template, err := template.New("todos.html").Funcs(funcMap).ParseFiles("./webapp/todos.html")
+	template, err := template.New("todos.html").ParseFiles("./webapp/todos.html")
 	if err != nil {
 		log.Fatal(err)
 	}

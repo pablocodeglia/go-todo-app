@@ -13,6 +13,8 @@ type Todo struct {
 	IsDone    bool      `json:"isDone" validate:"boolean"`
 	CreatedAt time.Time `json:"createdAt" validate:"required"`
 }
+
+//not really a useful interface but hey
 type TodoStorer interface {
 	Add()
 	Delete()

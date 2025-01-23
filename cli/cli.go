@@ -3,13 +3,12 @@ package cli
 import (
 	"bufio"
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"strings"
 )
 
-func GetUserInput(q string, stdin io.Reader) string {
+func GetUserInput(q string) string {
 	fmt.Println(q)
 	reader := bufio.NewReader(os.Stdin)
 	userId, err := reader.ReadString('\n')
